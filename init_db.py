@@ -41,6 +41,7 @@ def initialize_database():
                 status VARCHAR(50) DEFAULT 'Pending',
                 priority VARCHAR(50) DEFAULT 'Medium',
                 category VARCHAR(100) DEFAULT 'General',
+                description TEXT DEFAULT NULL,
                 FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
             )
         """)
