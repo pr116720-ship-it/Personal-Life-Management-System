@@ -1,0 +1,141 @@
+{% extends 'base.html' %}
+{% block title %}Calendar{% endblock %}
+
+{% block content %}
+<!-- FullCalendar CSS -->
+<link href='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css' rel='stylesheet' />
+<script src='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js'></script>
+
+<div class="row g-4 fade-in-up">
+    
+    <!-- Left Column: Calendar -->
+    <div class="col-xl-9">
+        <div class="glass p-4">
+            <h4 class="fw-bold mb-4">Task Calendar</h4>
+            <div id='calendar' style="min-height: 600px; color: var(--text-primary);"></div>
+        </div>
+    </div>
+    
+    <!-- Right Column: Monthly Progress -->
+    <div class="col-xl-3">
+        <div class="glass p-4 h-100 d-flex flex-column align-items-center text-center">
+            <h4 class="fw-bold mb-4 w-100 border-bottom border-secondary pb-3">Monthly Progress</h4>
+            
+            <p class="text-secondary mb-4">You have completed <strong class="text-white">{{ completed_month }}</strong> out of <strong class="text-white">{{ total_month }}</strong> tasks scheduled for this month.</p>
+            
+            <!-- Monthly Progress Circle -->
+            <div class="position-relative mb-4" style="width: 150px; height: 150px;">
+                <svg viewBox="0 0 36 36" class="circular-chart" style="width: 100%; height: 100%;">
+                    <!-- Background Circle -->
+                    <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" 
+                          style="fill: none; stroke: rgba(255,255,255,0.05); stroke-width: 3;"/>
+                    
+                    <!-- Progress Circle -->
+                    <path stroke-dasharray="{{ month_progress }}, 100" 
+                          d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" 
+                          style="fill: none; stroke: #3b82f6; stroke-width: 3; stroke-linecap: round; animation: progress 1.5s ease-out forwards;"/>
+                </svg>
+                <div class="position-absolute top-50 start-50 translate-middle fw-bold" style="font-size: 2rem;">
+                    {{ month_progress }}%
+                </div>
+            </div>
+            
+            <div class="mt-auto w-100">
+                <a href="{{ url_for('dashboard') }}" class="btn btn-outline-light w-100" style="border-radius: 12px;">
+                    <i class="fas fa-plus me-2"></i> Schedule Task
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* FullCalendar Customizations for Dark Glass Theme */
+    .fc-theme-standard .fc-scrollgrid,
+    .fc-theme-standard td, .fc-theme-standard th {
+        border-color: rgba(255,255,255,0.1) !important;
+    }
+    .fc-col-header-cell-cushion, .fc-daygrid-day-number {
+        color: var(--text-primary) !important;
+        text-decoration: none;
+    }
+    .fc-button-primary {
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)) !important;
+        border: none !important;
+        box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3) !important;
+        border-radius: 8px !important;
+        text-transform: capitalize;
+    }
+    .fc-button-primary:hover {
+        opacity: 0.9;
+    }
+    .fc-button-primary:disabled {
+        background: rgba(255,255,255,0.1) !important;
+        color: rgba(255,255,255,0.3) !important;
+        box-shadow: none !important;
+    }
+    .fc-day-today {
+        background: rgba(59, 130, 246, 0.1) !important;
+    }
+    
+    .fc-event {
+        border: none !important;
+        border-radius: 6px !important;
+        padding: 2px 4px !important;
+        font-weight: 600 !important;
+        font-family: 'Outfit', sans-serif !important;
+        cursor: pointer;
+    }
+    
+    /* Event Colors mapped to priorities */
+    .priority-high { background: rgba(239, 68, 68, 0.8) !important; color: white !important; }
+    .priority-medium { background: rgba(249, 115, 22, 0.8) !important; color: white !important; }
+    .priority-low { background: rgba(34, 197, 94, 0.8) !important; color: white !important; }
+    .task-completed { opacity: 0.5 !important; text-decoration: line-through; }
+    
+    @keyframes progress {
+        0% { stroke-dasharray: 0, 100; }
+    }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var calendarEl = document.getElementById('calendar');
+    
+    // Prepare events from tasks list
+    var calendarEvents = [
+        {% for task in tasks %}
+        {
+            title: '{{ task[2] }}',
+            start: '{{ task[3] }}',
+            allDay: true,
+            // Classname mapping for priority and status
+            classNames: [
+                {% if task[4] == 'Completed' %}'task-completed'{% endif %},
+                {% if task[5] == 'High' %}'priority-high'
+                {% elif task[5] == 'Medium' %}'priority-medium'
+                {% else %}'priority-low'{% endif %}
+            ]
+        },
+        {% endfor %}
+    ];
+
+    var calendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: 'dayGridMonth',
+        headerToolbar: {
+            left: 'prev,next today',
+            center: 'title',
+            right: 'dayGridMonth,timeGridWeek,timeGridDay'
+        },
+        events: calendarEvents,
+        height: 'auto',
+        eventClick: function(info) {
+            // Optional: could open edit modal or show details
+            // alert('Task: ' + info.event.title);
+        }
+    });
+    
+    calendar.render();
+});
+</script>
+{% endblock %}

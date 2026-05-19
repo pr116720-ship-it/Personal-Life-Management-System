@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="{{ theme }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Dashboard{% endblock %} | Life Management</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Drag and Drop Support -->
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body class="app-body">
+
+    <!-- Loading Screen -->
+    <div id="loader" class="loader-container">
+        <div class="spinner"></div>
+    </div>
+
+    <!-- Sidebar Layout -->
+    <div class="d-flex" id="wrapper">
+        
+        <!-- Sidebar -->
+        <div class="sidebar glass-sidebar" id="sidebar-wrapper">
+            <div class="sidebar-heading text-center py-4 fs-4 fw-bold text-uppercase border-bottom border-secondary">
+                <i class="fas fa-rocket text-primary me-2"></i>LifeApp
+            </div>
+            <div class="list-group list-group-flush my-3">
+                <a href="{{ url_for('dashboard') }}" class="list-group-item list-group-item-action bg-transparent text-white {% if request.endpoint == 'dashboard' %}active{% endif %}">
+                    <i class="fas fa-tachometer-alt me-2"></i>Dashboard
+                </a>
+                <a href="{{ url_for('tasks_view') }}" class="list-group-item list-group-item-action bg-transparent text-white {% if request.endpoint == 'tasks_view' %}active{% endif %} d-flex justify-content-between align-items-center">
+                    <div><i class="fas fa-tasks me-2"></i>Tasks</div>
+                    <div>
+                        <span class="badge bg-warning rounded-pill px-2" title="Pending Tasks">{{ sb_pending }}</span>
+                        <span class="badge bg-success rounded-pill px-2" title="Completed Tasks">{{ sb_completed }}</span>
+                    </div>
+                </a>
+                <a href="{{ url_for('calendar_view') }}" class="list-group-item list-group-item-action bg-transparent text-white {% if request.endpoint == 'calendar_view' %}active{% endif %}">
+                    <i class="fas fa-calendar-alt me-2"></i>Calendar
+                </a>
+                <a href="{{ url_for('analytics') }}" class="list-group-item list-group-item-action bg-transparent text-white {% if request.endpoint == 'analytics' %}active{% endif %}">
+                    <i class="fas fa-chart-line me-2"></i>Analytics
+                </a>
+                <a href="{{ url_for('profile') }}" class="list-group-item list-group-item-action bg-transparent text-white {% if request.endpoint == 'profile' %}active{% endif %}">
+                    <i class="fas fa-user me-2"></i>Profile
+                </a>
+            </div>
+        </div>
+        
+        <!-- Page Content -->
+        <div id="page-content-wrapper" class="w-100 position-relative">
+            
+            <!-- Top Nav -->
+            <nav class="navbar navbar-expand-lg navbar-dark bg-transparent py-4 px-4 glass-topbar">
+                <div class="d-flex align-items-center w-100 justify-content-between">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-bars text-white fs-4 me-3" id="menu-toggle" style="cursor: pointer;"></i>
+                        <h2 class="fs-3 m-0" style="font-weight: 800; background: linear-gradient(to right, #60a5fa, #c084fc); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+                            Welcome, {{ username }}!
+                        </h2>
+                    </div>
+                    
+                    <div class="d-flex align-items-center">
+                        <!-- Clock -->
+                        <div id="real-time-clock" class="text-white-50 me-4 fw-bold" style="font-variant-numeric: tabular-nums;"></div>
+                        
+                        <!-- Theme Toggle -->
+                        <button class="btn btn-outline-light rounded-circle me-3" id="theme-toggle" title="Toggle Light/Dark Mode">
+                            {% if theme == 'light' %}
+                            <i class="fas fa-sun text-warning"></i>
+                            {% else %}
+                            <i class="fas fa-moon"></i>
+                            {% endif %}
+                        </button>
+
+                        <!-- Notification -->
+                        <div class="dropdown me-3">
+                            <button class="btn btn-outline-light rounded-circle position-relative" type="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-bell"></i>
+                                <span class="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle">
+                                    <span class="visually-hidden">New alerts</span>
+                                </span>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark">
+                                <li><a class="dropdown-item" href="#">AI Suggestion: {{ suggestion }}</a></li>
+                            </ul>
+                        </div>
+                        
+                        <!-- Profile -->
+                        <div class="dropdown">
+                            <a class="nav-link dropdown-toggle text-white d-flex align-items-center" href="#" role="button" data-bs-toggle="dropdown">
+                                {% if profile_pic and profile_pic != 'default_profile.png' %}
+                                <img src="{{ url_for('static', filename='profile_pics/' + profile_pic) }}" class="rounded-circle me-2" width="35" height="35" style="object-fit: cover;" alt="Avatar">
+                                {% else %}
+                                <img src="https://ui-avatars.com/api/?name={{ username }}&background=60a5fa&color=fff" class="rounded-circle me-2" width="35" height="35" alt="Avatar">
+                                {% endif %}
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark">
+                                <li><a class="dropdown-item" href="{{ url_for('profile') }}"><i class="fas fa-user fa-sm fa-fw me-2 text-gray-400"></i> Profile</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item text-danger" href="#" data-bs-toggle="modal" data-bs-target="#logoutModal"><i class="fas fa-sign-out-alt fa-sm fa-fw me-2 text-gray-400"></i> Logout</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+
+            <!-- Main Content -->
+            <div class="container-fluid px-4 py-4 fade-in-up">
+                
+                <!-- Flash Messages -->
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                  {% if messages %}
+                    <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 1050">
+                        {% for category, message in messages %}
+                        <div class="toast align-items-center text-white bg-{{ 'success' if category == 'success' else 'danger' if category == 'danger' else 'primary' }} border-0 show glass mb-2" role="alert" aria-live="assertive" aria-atomic="true" style="animation: fadeInUp 0.3s ease;">
+                          <div class="d-flex">
+                            <div class="toast-body fw-bold">
+                                {% if category == 'success' %}<i class="fas fa-check-circle me-2"></i>{% else %}<i class="fas fa-info-circle me-2"></i>{% endif %}
+                                {{ message }}
+                            </div>
+                            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                          </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                  {% endif %}
+                {% endwith %}
+
+                {% block content %}{% endblock %}
+            </div>
+            
+        </div>
+    </div>
+
+    <!-- Logout Confirmation Modal -->
+    <div class="modal fade" id="logoutModal" tabindex="-1" aria-labelledby="logoutModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content glass">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title text-white fw-bold" id="logoutModalLabel">
+                        <i class="fas fa-sign-out-alt text-danger me-2"></i>Confirm Logout
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-white-50 py-4">
+                    Are you sure you want to logout? You will be redirected back to the login screen.
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-outline-light rounded-pill px-4" data-bs-dismiss="modal">Cancel</button>
+                    <a href="#" onclick="initiateLogout(event)" class="btn btn-danger rounded-pill px-4 fw-bold">Yes, Logout</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Loading Screen
+        window.addEventListener('load', () => {
+            document.getElementById('loader').style.opacity = '0';
+            setTimeout(() => {
+                document.getElementById('loader').style.display = 'none';
+            }, 500);
+        });
+
+        // Toggle Sidebar
+        let el = document.getElementById("wrapper");
+        let toggleButton = document.getElementById("menu-toggle");
+        toggleButton.onclick = function () {
+            el.classList.toggle("toggled");
+        };
+
+        // Real time clock
+        function updateClock() {
+            const now = new Date();
+            let hours = now.getHours();
+            let ampm = hours >= 12 ? 'PM' : 'AM';
+            hours = hours % 12;
+            hours = hours ? hours : 12; // the hour '0' should be '12'
+            let minutes = now.getMinutes().toString().padStart(2, '0');
+            let seconds = now.getSeconds().toString().padStart(2, '0');
+            let timeString = hours + ':' + minutes + ':' + seconds + ' ' + ampm;
+            
+            const options = { weekday: 'short', month: 'short', day: 'numeric' };
+            let dateString = now.toLocaleDateString('en-US', options);
+            
+            document.getElementById('real-time-clock').textContent = `${dateString} | ${timeString}`;
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        // Theme Toggle (Database Synced)
+        const themeToggleBtn = document.getElementById('theme-toggle');
+        if (themeToggleBtn) {
+            themeToggleBtn.addEventListener('click', () => {
+                const currentTheme = document.documentElement.getAttribute('data-theme');
+                const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+                
+                document.documentElement.setAttribute('data-theme', newTheme);
+                themeToggleBtn.innerHTML = newTheme === 'light' ? '<i class="fas fa-sun text-warning"></i>' : '<i class="fas fa-moon"></i>';
+                
+                // Sync theme dynamically with backend database
+                fetch("{{ url_for('update_settings') }}", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ theme: newTheme })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (!data.success) console.error("Theme sync failed:", data.message);
+                })
+                .catch(err => console.error("Network error syncing theme:", err));
+            });
+        }
+
+        // Secure Logout Transition & Storage Clearance
+        function initiateLogout(event) {
+            event.preventDefault();
+            
+            // Hide the Bootstrap Modal smoothly
+            const modalEl = document.getElementById('logoutModal');
+            const modalInstance = bootstrap.Modal.getInstance(modalEl);
+            if (modalInstance) {
+                modalInstance.hide();
+            }
+            
+            // Create and append the premium full-screen blur loader overlay dynamically
+            const overlay = document.createElement('div');
+            overlay.className = 'logout-overlay-screen';
+            overlay.innerHTML = `
+                <div class="logout-spinner-box">
+                    <div class="spinner-border text-danger mb-4" role="status" style="width: 3.5rem; height: 3.5rem; border-width: 0.25em; filter: drop-shadow(0 0 10px rgba(239, 68, 68, 0.4));"></div>
+                    <h3 class="text-white fw-bold pulsing-logout-text">Logging out securely...</h3>
+                    <p class="text-white-50 mt-2" style="font-size: 0.95rem; font-weight: 500;">Clearing session and local storage</p>
+                </div>
+            `;
+            document.body.appendChild(overlay);
+            
+            // Trigger active class for smooth backdrop blur & fade-in transitions
+            setTimeout(() => {
+                overlay.classList.add('active');
+            }, 50);
+            
+            // Clear all frontend browser storage
+            localStorage.clear();
+            sessionStorage.clear();
+            
+            // Clear all local cookies
+            const cookies = document.cookie.split(";");
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i];
+                const eqPos = cookie.indexOf("=");
+                const name = eqPos > -1 ? cookie.substr(0, eqPos).trim() : cookie.trim();
+                document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/";
+            }
+            
+            // Allow 1 second for the beautiful full-page fade-out animation to complete, then perform route redirect
+            setTimeout(() => {
+                window.location.href = "{{ url_for('logout') }}";
+            }, 1000);
+        }
+    </script>
+</body>
+</html>

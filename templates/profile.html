@@ -1,0 +1,552 @@
+{% extends "base.html" %}
+{% block title %}Profile{% endblock %}
+{% block content %}
+
+<!-- Custom HSL CSS Property for Dynamic Radial Meter -->
+<div class="row fade-in-up" style="--productivity: {{ productivity }};">
+
+    <!-- Left Column: Profile Card & General Info -->
+    <div class="col-lg-4 mb-4">
+        <div class="card glass h-100 profile-card border-0">
+            <div class="card-body text-center p-4">
+
+                <!-- Avatar Upload Section -->
+                <div class="avatar-container mb-3 position-relative">
+                    {% if profile_pic and profile_pic != 'default_profile.png' %}
+                    <img id="profile-avatar-img" src="{{ url_for('static', filename='profile_pics/' + profile_pic) }}"
+                        class="avatar-img" alt="Profile Picture">
+                    {% else %}
+                    <img id="profile-avatar-img"
+                        src="https://ui-avatars.com/api/?name={{ username }}&background=60a5fa&color=fff&size=128"
+                        class="avatar-img" alt="Profile Picture">
+                    {% endif %}
+
+                    <!-- Hover upload overlay -->
+                    <div class="avatar-overlay" onclick="document.getElementById('avatar-input').click();">
+                        <i class="fas fa-camera"></i>
+                        <span>Upload Photo</span>
+                    </div>
+                </div>
+
+                <!-- Hidden Input for File -->
+                <input type="file" id="avatar-input" style="display:none;" accept="image/*"
+                    onchange="uploadAvatar(this);">
+
+                <!-- Username & Title -->
+                <h3 class="fw-bold mb-1 text-white">{{ user[0] }}</h3>
+                <p class="text-white-50 mb-3" style="font-size: 0.95rem;">
+                    <i class="fas fa-user-circle me-1 text-primary"></i>
+                    {% if user[2] %}{{ user[2] }}{% else %}Registered User{% endif %}
+                </p>
+
+                <hr class="border-secondary opacity-25 my-3">
+
+                <!-- Detailed User Information -->
+                <div class="text-start">
+                    <div class="mb-3 d-flex align-items-center">
+                        <div class="bg-primary bg-opacity-10 rounded-circle p-2 me-3"
+                            style="width: 40px; height: 40px; display: flex; justify-content: center; align-items: center;">
+                            <i class="fas fa-envelope text-primary"></i>
+                        </div>
+                        <div>
+                            <small class="text-white-50 d-block">Email Address</small>
+                            <span class="text-white fw-semibold" style="word-break: break-all;">{{ user[1] }}</span>
+                        </div>
+                    </div>
+
+                    <div class="mb-3 d-flex align-items-center">
+                        <div class="bg-primary bg-opacity-10 rounded-circle p-2 me-3"
+                            style="width: 40px; height: 40px; display: flex; justify-content: center; align-items: center;">
+                            <i class="fas fa-phone text-primary"></i>
+                        </div>
+                        <div>
+                            <small class="text-white-50 d-block">Phone Number</small>
+                            <span class="text-white fw-semibold">{% if user[3] %}{{ user[3] }}{% else %}<span
+                                    class="text-muted italic" style="font-size: 0.85rem;">Not added</span>{% endif
+                                %}</span>
+                        </div>
+                    </div>
+
+                    <div class="mb-3 d-flex align-items-center">
+                        <div class="bg-primary bg-opacity-10 rounded-circle p-2 me-3"
+                            style="width: 40px; height: 40px; display: flex; justify-content: center; align-items: center;">
+                            <i class="fas fa-birthday-cake text-primary"></i>
+                        </div>
+                        <div>
+                            <small class="text-white-50 d-block">Date of Birth</small>
+                            <span class="text-white fw-semibold">{% if user[4] %}{{ user[4] }}{% else %}<span
+                                    class="text-muted italic" style="font-size: 0.85rem;">Not added</span>{% endif
+                                %}</span>
+                        </div>
+                    </div>
+
+                    <div class="mb-3 d-flex align-items-center">
+                        <div class="bg-primary bg-opacity-10 rounded-circle p-2 me-3"
+                            style="width: 40px; height: 40px; display: flex; justify-content: center; align-items: center;">
+                            <i class="fas fa-venus-mars text-primary"></i>
+                        </div>
+                        <div>
+                            <small class="text-white-50 d-block">Gender</small>
+                            <span class="text-white fw-semibold">{% if user[5] %}{{ user[5] }}{% else %}<span
+                                    class="text-muted italic" style="font-size: 0.85rem;">Not added</span>{% endif
+                                %}</span>
+                        </div>
+                    </div>
+
+                    <div class="mb-3 d-flex align-items-center">
+                        <div class="bg-primary bg-opacity-10 rounded-circle p-2 me-3"
+                            style="width: 40px; height: 40px; display: flex; justify-content: center; align-items: center;">
+                            <i class="fas fa-id-card text-primary"></i>
+                        </div>
+                        <div>
+                            <small class="text-white-50 d-block">User ID</small>
+                            <span class="text-white fw-semibold">#{{ user[10] }}</span>
+                        </div>
+                    </div>
+
+                    <div class="mb-3 d-flex align-items-center">
+                        <div class="bg-primary bg-opacity-10 rounded-circle p-2 me-3"
+                            style="width: 40px; height: 40px; display: flex; justify-content: center; align-items: center;">
+                            <i class="fas fa-calendar-plus text-primary"></i>
+                        </div>
+                        <div>
+                            <small class="text-white-50 d-block">Member Since</small>
+                            <span class="text-white fw-semibold" id="member-since-date">{{ user[9].strftime('%b %d, %Y')
+                                if user[9] else 'Recently' }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-4 d-grid gap-2">
+                    <button class="btn btn-primary rounded-pill fw-bold py-2" data-bs-toggle="collapse"
+                        data-bs-target="#editProfileFormContainer">
+                        <i class="fas fa-edit me-2"></i>Edit Profile
+                    </button>
+                    <button class="btn btn-outline-light rounded-pill fw-bold py-2" data-bs-toggle="modal"
+                        data-bs-target="#changePasswordModal">
+                        <i class="fas fa-key me-2"></i>Change Password
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Column: Stats, Badges, Settings & Timeline -->
+    <div class="col-lg-8">
+
+        <!-- Sliding Edit Profile Form -->
+        <div class="collapse mb-4" id="editProfileFormContainer">
+            <div class="card glass border-0">
+                <div class="card-body p-4">
+                    <h5 class="text-white fw-bold mb-3"><i class="fas fa-user-edit text-primary me-2"></i>Update User
+                        Details</h5>
+                    <form action="{{ url_for('update_profile') }}" method="POST">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label text-white-50">Username</label>
+                                <input type="text" class="form-control custom-input" name="username"
+                                    value="{{ user[0] }}" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label text-white-50">Email</label>
+                                <input type="email" class="form-control custom-input" name="email" value="{{ user[1] }}"
+                                    required>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label text-white-50">Full Name</label>
+                                <input type="text" class="form-control custom-input" name="full_name"
+                                    value="{{ user[2] or '' }}" placeholder="Enter full name">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label text-white-50">Phone Number</label>
+                                <input type="text" class="form-control custom-input" name="phone"
+                                    value="{{ user[3] or '' }}" placeholder="Enter phone number">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label text-white-50">Date of Birth</label>
+                                <input type="date" class="form-control custom-input" name="dob"
+                                    value="{{ user[4] or '' }}">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label text-white-50">Gender</label>
+                                <select class="form-select custom-input" name="gender">
+                                    <option value="" {% if not user[5] %}selected{% endif %}>Select Gender</option>
+                                    <option value="Male" {% if user[5]=='Male' %}selected{% endif %}>Male</option>
+                                    <option value="Female" {% if user[5]=='Female' %}selected{% endif %}>Female</option>
+                                    <option value="Other" {% if user[5]=='Other' %}selected{% endif %}>Other</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="text-end mt-3">
+                            <button type="button" class="btn btn-outline-light rounded-pill px-4 me-2"
+                                data-bs-toggle="collapse" data-bs-target="#editProfileFormContainer">Cancel</button>
+                            <button type="submit" class="btn btn-success rounded-pill px-4 fw-bold">Save
+                                Changes</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Row 2.1: Productivity Dashboard Statistics -->
+        <div class="row mb-4">
+            <div class="col-md-6 mb-3 mb-md-0">
+                <div class="card glass h-100 border-0">
+                    <div class="card-body p-4 text-center d-flex flex-column justify-content-center">
+                        <h5 class="text-white-50 fw-semibold mb-3"><i
+                                class="fas fa-chart-pie me-2 text-primary"></i>Productivity Level</h5>
+                        <div class="radial-meter" style="--productivity: {{ productivity }};">
+                            <span class="radial-value">{{ productivity }}%</span>
+                        </div>
+                        <p class="text-white-50 mt-3 mb-0" style="font-size: 0.9rem;">Calculated based on completed vs.
+                            total tasks.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="card glass h-100 border-0">
+                    <div class="card-body p-4 d-flex flex-column justify-content-between">
+                        <h5 class="text-white-50 fw-semibold mb-3 text-center text-md-start"><i
+                                class="fas fa-tasks me-2 text-primary"></i>Task Statistics</h5>
+
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <span class="text-white"><i class="fas fa-folder-open me-2 text-info"></i>Total Tasks</span>
+                            <h3 class="m-0 fw-bold text-info">{{ total_tasks }}</h3>
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <span class="text-white"><i class="fas fa-check-double me-2 text-success"></i>Completed
+                                Tasks</span>
+                            <h3 class="m-0 fw-bold text-success">{{ completed_tasks }}</h3>
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="text-white"><i class="fas fa-hourglass-half me-2 text-warning"></i>Pending
+                                Tasks</span>
+                            <h3 class="m-0 fw-bold text-warning">{{ pending_tasks }}</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Row 2.2: Achievements & Badges -->
+        <div class="card glass mb-4 border-0">
+            <div class="card-body p-4">
+                <h5 class="text-white fw-bold mb-4"><i class="fas fa-award text-warning me-2"></i>Achievement Badges
+                </h5>
+
+                <div class="row">
+                    <!-- Badge 1: Task Master -->
+                    <div class="col-md-4 mb-3 mb-md-0">
+                        {% set is_master = completed_tasks >= 10 %}
+                        <div class="badge-card {% if is_master %}unlocked{% else %}locked{% endif %}">
+                            <i
+                                class="fas fa-crown {% if is_master %}text-warning{% else %}text-secondary{% endif %}"></i>
+                            <h6 class="text-white fw-bold mb-1">Task Master</h6>
+                            <small class="text-white-50 d-block" style="font-size:0.75rem;">Complete 10+ tasks</small>
+                            <span
+                                class="badge {% if is_master %}bg-success{% else %}bg-secondary{% endif %} rounded-pill mt-2 px-2 py-1">
+                                {% if is_master %}Unlocked{% else %}Locked{% endif %}
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Badge 2: Productivity Star -->
+                    <div class="col-md-4 mb-3 mb-md-0">
+                        {% set is_star = (productivity >= 80 and completed_tasks >= 5) %}
+                        <div class="badge-card {% if is_star %}unlocked{% else %}locked{% endif %}">
+                            <i class="fas fa-star {% if is_star %}text-info{% else %}text-secondary{% endif %}"></i>
+                            <h6 class="text-white fw-bold mb-1">Productivity Star</h6>
+                            <small class="text-white-50 d-block" style="font-size:0.75rem;">Productivity > 80+
+                                tasks</small>
+                            <span
+                                class="badge {% if is_star %}bg-success{% else %}bg-secondary{% endif %} rounded-pill mt-2 px-2 py-1">
+                                {% if is_star %}Unlocked{% else %}Locked{% endif %}
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Badge 3: Goal Achiever -->
+                    <div class="col-md-4">
+                        {% set is_achiever = (completed_tasks >= 1 and pending_tasks == 0) %}
+                        <div class="badge-card {% if is_achiever %}unlocked{% else %}locked{% endif %}">
+                            <i
+                                class="fas fa-trophy {% if is_achiever %}text-success{% else %}text-secondary{% endif %}"></i>
+                            <h6 class="text-white fw-bold mb-1">Goal Achiever</h6>
+                            <small class="text-white-50 d-block" style="font-size:0.75rem;">All tasks completed</small>
+                            <span
+                                class="badge {% if is_achiever %}bg-success{% else %}bg-secondary{% endif %} rounded-pill mt-2 px-2 py-1">
+                                {% if is_achiever %}Unlocked{% else %}Locked{% endif %}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Row 2.3: Settings Switches & User Activity History -->
+        <div class="row">
+            <!-- Preferences & Settings -->
+            <div class="col-md-5 mb-4">
+                <div class="card glass h-100 border-0">
+                    <div class="card-body p-4">
+                        <h5 class="text-white fw-bold mb-4"><i class="fas fa-cog text-secondary me-2"></i>Preferences
+                        </h5>
+
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <div>
+                                <h6 class="text-white mb-0"><i class="fas fa-palette me-2 text-white-50"></i>Light Theme
+                                </h6>
+                                <small class="text-white-50">Switch workspace background theme</small>
+                            </div>
+                            <div class="form-check form-switch m-0">
+                                <input class="form-check-input custom-switch" type="checkbox" id="themeSwitch" {% if
+                                    theme=='light' %}checked{% endif %}>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="text-white mb-0"><i class="fas fa-bell me-2 text-white-50"></i>Notifications
+                                </h6>
+                                <small class="text-white-50">Receive alerts & dynamic suggestions</small>
+                            </div>
+                            <div class="form-check form-switch m-0">
+                                <input class="form-check-input custom-switch" type="checkbox" id="notificationsSwitch"
+                                    {% if notifications_enabled %}checked{% endif %}>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Activity Logs Timeline -->
+            <div class="col-md-7 mb-4">
+                <div class="card glass h-100 border-0">
+                    <div class="card-body p-4">
+                        <h5 class="text-white fw-bold mb-4"><i class="fas fa-history text-info me-2"></i>Recent Activity
+                        </h5>
+
+                        {% if activities %}
+                        <ul class="activity-timeline">
+                            {% for act in activities %}
+                            {% set act_type = 'login' if 'Login' in act[0] or 'Logged in' in act[0] or 'logout' in
+                            act[0] or 'Logged out' in act[0] else 'settings' if 'theme' in act[0] or 'notifications' in
+                            act[0] or 'profile' in act[0] or 'password' in act[0] else 'task' %}
+                            <li class="activity-item {{ act_type }}">
+                                <p class="activity-desc">{{ act[0] }}</p>
+                                <span class="activity-time"><i class="far fa-clock me-1"></i>{{ act[1].strftime('%b %d,
+                                    %I:%M %p') }}</span>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                        {% else %}
+                        <div class="text-center py-4 text-white-50">
+                            <i class="fas fa-history fs-2 mb-3 opacity-25"></i>
+                            <p class="m-0">No dynamic activities logged yet.</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- Change Password Glassmorphic Modal -->
+<div class="modal fade" id="changePasswordModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content glass">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title text-white fw-bold"><i class="fas fa-shield-alt text-primary me-2"></i>Change
+                    Password</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                    aria-label="Close"></button>
+            </div>
+            <div class="modal-body py-4">
+                <div id="password-alert" class="alert d-none" role="alert"></div>
+                <form id="changePasswordForm">
+                    <div class="mb-3">
+                        <label class="form-label text-white-50">Current Password</label>
+                        <input type="password" class="form-control custom-input" name="current_password" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-white-50">New Password</label>
+                        <input type="password" class="form-control custom-input" name="new_password" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-white-50">Confirm New Password</label>
+                        <input type="password" class="form-control custom-input" name="confirm_password" required>
+                    </div>
+                    <div class="text-end mt-4">
+                        <button type="button" class="btn btn-outline-light rounded-pill px-4 me-2"
+                            data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary rounded-pill px-4 fw-bold">Update Password</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // AJAX Profile Avatar Photo Upload
+    function uploadAvatar(input) {
+        if (input.files && input.files[0]) {
+            const formData = new FormData();
+            formData.append('profile_pic', input.files[0]);
+
+            fetch("{{ url_for('upload_pic') }}", {
+                method: 'POST',
+                body: formData
+            })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        // Instantly refresh profile page avatar image
+                        document.getElementById('profile-avatar-img').src = data.filepath;
+                        // Instantly refresh header dropdown avatar image
+                        const navAvatars = document.querySelectorAll('.navbar img');
+                        navAvatars.forEach(img => img.src = data.filepath);
+
+                        // Show standard Bootstrap toast
+                        alertToast("Profile image updated successfully!", "success");
+                    } else {
+                        alertToast(data.message || "Failed to upload image", "danger");
+                    }
+                })
+                .catch(err => {
+                    console.error("Upload error:", err);
+                    alertToast("An error occurred during file upload.", "danger");
+                });
+        }
+    }
+
+    // AJAX Settings: Notification Switch
+    const nSwitch = document.getElementById('notificationsSwitch');
+    if (nSwitch) {
+        nSwitch.addEventListener('change', () => {
+            fetch("{{ url_for('update_settings') }}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ notifications: nSwitch.checked })
+            })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        alertToast("Notification preferences updated!", "success");
+                    } else {
+                        alertToast("Failed to update notification setting.", "danger");
+                    }
+                })
+                .catch(err => console.error("Error setting notification toggle:", err));
+        });
+    }
+
+    // AJAX Settings: Theme Switch in Profile Card
+    const pThemeSwitch = document.getElementById('themeSwitch');
+    if (pThemeSwitch) {
+        pThemeSwitch.addEventListener('change', () => {
+            const newTheme = pThemeSwitch.checked ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', newTheme);
+
+            // Sync with navbar button icon
+            const navBtn = document.getElementById('theme-toggle');
+            if (navBtn) {
+                navBtn.innerHTML = newTheme === 'light' ? '<i class="fas fa-sun text-warning"></i>' : '<i class="fas fa-moon"></i>';
+            }
+
+            fetch("{{ url_for('update_settings') }}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ theme: newTheme })
+            })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        alertToast("Theme preference updated!", "success");
+                    } else {
+                        alertToast("Failed to sync theme preference.", "danger");
+                    }
+                })
+                .catch(err => console.error("Error setting theme toggle:", err));
+        });
+    }
+
+    // AJAX Password Modification Form Submit
+    const changePasswordForm = document.getElementById('changePasswordForm');
+    if (changePasswordForm) {
+        changePasswordForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const alertBox = document.getElementById('password-alert');
+            alertBox.className = "alert d-none"; // Reset classes
+
+            const formData = new FormData(changePasswordForm);
+
+            fetch("{{ url_for('change_password') }}", {
+                method: 'POST',
+                body: formData
+            })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        alertBox.textContent = data.message;
+                        alertBox.className = "alert alert-success";
+                        changePasswordForm.reset();
+                        setTimeout(() => {
+                            const modalEl = document.getElementById('changePasswordModal');
+                            const modalInstance = bootstrap.Modal.getInstance(modalEl);
+                            if (modalInstance) modalInstance.hide();
+                            alertBox.className = "alert d-none";
+                        }, 1800);
+                    } else {
+                        alertBox.textContent = data.message || "An error occurred.";
+                        alertBox.className = "alert alert-danger";
+                    }
+                })
+                .catch(err => {
+                    console.error("Error changing password:", err);
+                    alertBox.textContent = "Network error. Please try again.";
+                    alertBox.className = "alert alert-danger";
+                });
+        });
+    }
+
+    // Quick Toast Helper Function
+    function alertToast(message, type) {
+        const toastEl = document.createElement('div');
+        toastEl.className = `position-fixed bottom-0 end-0 p-3`;
+        toastEl.style.zIndex = "1050";
+
+        toastEl.innerHTML = `
+            <div class="toast align-items-center text-white bg-${type === 'success' ? 'success' : 'danger'} border-0 show glass" role="alert" style="animation: fadeInUp 0.3s ease;">
+              <div class="d-flex">
+                <div class="toast-body fw-bold">
+                    <i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'} me-2"></i>
+                    ${message}
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+              </div>
+            </div>
+        `;
+        document.body.appendChild(toastEl);
+        setTimeout(() => {
+            toastEl.style.opacity = '0';
+            setTimeout(() => toastEl.remove(), 400);
+        }, 3000);
+    }
+</script>
+
+{% endblock %}

@@ -1,0 +1,232 @@
+{% extends 'base.html' %}
+{% block title %}Analytics{% endblock %}
+
+{% block content %}
+<div class="row g-4 mb-4 fade-in-up">
+    <div class="col-xl-3 col-md-6">
+        <div class="glass stat-card">
+            <h3>Total Tasks</h3>
+            <h2>{{ total_tasks }}</h2>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6">
+        <div class="glass stat-card" style="border-bottom: 4px solid #3b82f6;">
+            <h3>Pending</h3>
+            <h2>{{ pending_tasks }}</h2>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6">
+        <div class="glass stat-card" style="border-bottom: 4px solid #22c55e;">
+            <h3>Completed</h3>
+            <h2 style="background: linear-gradient(to right, #4ade80, #22c55e); -webkit-background-clip: text;">{{ completed_tasks }}</h2>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6">
+        <div class="glass stat-card">
+            <h3>Productivity</h3>
+            <h2>{{ productivity }}%</h2>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 fade-in-up" style="animation-delay: 0.1s;">
+    <!-- Pie Chart -->
+    <div class="col-xl-4">
+        <div class="glass p-4 h-100">
+            <h4 class="fw-bold mb-4">Task Status (Completed vs Pending)</h4>
+            <div style="position: relative; height: 300px;">
+                <canvas id="pieChart"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Bar Chart -->
+    <div class="col-xl-8">
+        <div class="glass p-4 h-100">
+            <h4 class="fw-bold mb-4">Weekly Productivity</h4>
+            <div style="position: relative; height: 300px;">
+                <canvas id="barChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4 fade-in-up" style="animation-delay: 0.2s;">
+    <!-- Line Chart -->
+    <div class="col-12">
+        <div class="glass p-4">
+            <h4 class="fw-bold mb-4">Task Performance Over Time (Demo Data)</h4>
+            <div style="position: relative; height: 350px;">
+                <canvas id="lineChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Category Analytics Section -->
+<div class="row mt-4 fade-in-up" style="animation-delay: 0.3s;">
+    <div class="col-12">
+        <div class="glass p-4">
+            <h4 class="fw-bold mb-4 border-bottom border-secondary pb-3"><i class="fas fa-layer-group me-2 text-primary"></i>Task Analytics by Category</h4>
+            
+            <!-- Summary Cards -->
+            <div class="row g-3 mb-4">
+                <div class="col-md-3">
+                    <div class="p-3 rounded" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform='translateY(0)'">
+                        <h6 class="text-secondary mb-1">Active Categories</h6>
+                        <h3 class="mb-0 text-white">{{ total_categories }}</h3>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="p-3 rounded" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform='translateY(0)'">
+                        <h6 class="text-secondary mb-1">Total Tasks</h6>
+                        <h3 class="mb-0 text-white">{{ total_tasks }}</h3>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="p-3 rounded" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform='translateY(0)'">
+                        <h6 class="text-secondary mb-1">Total Completed</h6>
+                        <h3 class="mb-0 text-success">{{ completed_tasks }}</h3>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="p-3 rounded" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform='translateY(0)'">
+                        <h6 class="text-secondary mb-1">Overall Progress</h6>
+                        <h3 class="mb-0 text-primary">{{ productivity }}%</h3>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Table -->
+            <div class="table-responsive">
+                <table class="table table-borderless table-hover align-middle mb-0" style="color: var(--text-primary);">
+                    <thead style="border-bottom: 2px solid rgba(255,255,255,0.1);">
+                        <tr>
+                            <th class="text-secondary py-3">Category</th>
+                            <th class="text-secondary text-center py-3">Total Tasks</th>
+                            <th class="text-secondary text-center py-3">Completed</th>
+                            <th class="text-secondary text-center py-3">Pending</th>
+                            <th class="text-secondary text-center py-3">Progress</th>
+                            <th class="text-secondary py-3" style="width: 25%;">Completion Bar</th>
+                            <th class="text-secondary text-end py-3">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for cat in cat_stats %}
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); cursor: pointer;" onmouseover="this.style.backgroundColor='rgba(255,255,255,0.02)'" onmouseout="this.style.backgroundColor='transparent'">
+                            <td class="py-3 fw-bold">
+                                {% if cat.name == 'Work' %}<i class="fas fa-briefcase text-primary me-2"></i>
+                                {% elif cat.name == 'Personal' %}<i class="fas fa-user text-info me-2"></i>
+                                {% elif cat.name == 'Health' %}<i class="fas fa-heart text-danger me-2"></i>
+                                {% elif cat.name == 'Finance' %}<i class="fas fa-wallet text-success me-2"></i>
+                                {% else %}<i class="fas fa-globe text-warning me-2"></i>{% endif %}
+                                {{ cat.name }}
+                            </td>
+                            <td class="py-3 text-center fs-5">{{ cat.total }}</td>
+                            <td class="py-3 text-center text-success fw-bold">{{ cat.completed }}</td>
+                            <td class="py-3 text-center text-warning fw-bold">{{ cat.pending }}</td>
+                            <td class="py-3 text-center fw-bold text-{{ cat.color }} fs-5">{{ cat.percentage }}%</td>
+                            <td class="py-3">
+                                <div class="progress" style="height: 8px; background: rgba(255,255,255,0.1); border-radius: 10px;">
+                                    <div class="progress-bar progress-bar-striped progress-bar-animated bg-{{ cat.color }}" 
+                                         role="progressbar" 
+                                         style="width: {{ cat.percentage }}%; border-radius: 10px;" 
+                                         aria-valuenow="{{ cat.percentage }}" aria-valuemin="0" aria-valuemax="100">
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="py-3 text-end">
+                                <span class="badge bg-{{ cat.color }} opacity-75 rounded-pill px-3 py-2 shadow-sm">{{ cat.status }}</span>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="7" class="text-center py-5 text-secondary">
+                                <i class="fas fa-box-open fs-2 mb-3 d-block"></i>
+                                No task data available to generate category analytics. Add some tasks first!
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    Chart.defaults.color = '#94a3b8';
+    Chart.defaults.font.family = "'Outfit', sans-serif";
+    
+    // Pie Chart
+    new Chart(document.getElementById('pieChart').getContext('2d'), {
+        type: 'doughnut',
+        data: {
+            labels: ['Completed', 'Pending'],
+            datasets: [{
+                data: [{{ completed_tasks }}, {{ pending_tasks }}],
+                backgroundColor: ['rgba(34, 197, 94, 0.8)', 'rgba(234, 179, 8, 0.8)'],
+                borderColor: ['rgba(34, 197, 94, 1)', 'rgba(234, 179, 8, 1)'],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '70%',
+            plugins: { legend: { position: 'bottom' } }
+        }
+    });
+
+    // Bar Chart (Demo Data for Weekly)
+    new Chart(document.getElementById('barChart').getContext('2d'), {
+        type: 'bar',
+        data: {
+            labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+            datasets: [{
+                label: 'Tasks Completed',
+                data: [3, 5, 2, 8, 4, 1, 6],
+                backgroundColor: 'rgba(59, 130, 246, 0.6)',
+                borderColor: 'rgba(59, 130, 246, 1)',
+                borderWidth: 1,
+                borderRadius: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                y: { beginAtZero: true, grid: { color: 'rgba(255, 255, 255, 0.05)' } },
+                x: { grid: { display: false } }
+            }
+        }
+    });
+    
+    // Line Chart (Demo Data over time)
+    new Chart(document.getElementById('lineChart').getContext('2d'), {
+        type: 'line',
+        data: {
+            labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4', 'Week 5'],
+            datasets: [{
+                label: 'Overall Performance',
+                data: [45, 60, 50, 80, 75],
+                borderColor: '#c084fc',
+                backgroundColor: 'rgba(192, 132, 252, 0.2)',
+                borderWidth: 3,
+                tension: 0.4,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                y: { beginAtZero: true, grid: { color: 'rgba(255, 255, 255, 0.05)' } },
+                x: { grid: { display: false } }
+            }
+        }
+    });
+</script>
+{% endblock %}
